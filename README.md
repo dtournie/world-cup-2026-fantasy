@@ -6,8 +6,8 @@ A responsive live scores, standings, and fantasy bracket dashboard backed by Der
 
 - **UI:** dependency-free responsive HTML/CSS/JavaScript.
 - **Server:** a small Node HTTP server that keeps API credentials off the browser.
-- **Live tournament data:** ESPN's World Cup JSON endpoints for fixtures, scores, match status, standings, team logos, colors, venues, and broadcasts.
-- **Fantasy source:** the public read-only Google Sheet CSV feed, refreshed through `/api/sheet`, with an audited snapshot in `public/app.js` as fallback.
+- **Live tournament data:** ESPN's World Cup JSON endpoints for fixtures, scores, match status, team logos, colors, venues, and broadcasts.
+- **Standings and fantasy source:** the public read-only Google Sheet CSV feed, including `Group Table!A1:J60`, refreshed through `/api/sheet`.
 - **Resilience:** the UI keeps an audited local snapshot when a live request fails. Server responses are cached for 45 seconds.
 
 ## Run locally

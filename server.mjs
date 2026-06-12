@@ -94,6 +94,38 @@ function parseGroupPicks(mainCsv, qualifiersCsv) {
   return picks;
 }
 
+function parseGroupStandings(rows = []) {
+  const groups = [];
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex] || [];
+    const groupMatch = String(row[0] || "").match(/^Group\s+([A-L])$/i);
+    if (!groupMatch) continue;
+    const letter = groupMatch[1].toUpperCase();
+    const teams = rows.slice(rowIndex + 1, rowIndex + 5).map((teamRow, index) => {
+      const rawName = teamRow?.[9] || String(teamRow?.[0] || "").replace(/^\d[A-Z]{3}/, "");
+      const goalsFor = Number(teamRow?.[5] || 0);
+      const goalsAgainst = Number(teamRow?.[6] || 0);
+      const parsedGoalDifference = Number(String(teamRow?.[7] || "").replace("+", ""));
+      return {
+        rank: Number(String(teamRow?.[0] || "").match(/^\d+/)?.[0]) || index + 1,
+        name: stripFlag(rawName),
+        played: Number(teamRow?.[1] || 0),
+        wins: Number(teamRow?.[2] || 0),
+        draws: Number(teamRow?.[3] || 0),
+        losses: Number(teamRow?.[4] || 0),
+        goalsFor,
+        goalsAgainst,
+        goalDifference: Number.isFinite(parsedGoalDifference) && teamRow?.[7] !== ""
+          ? parsedGoalDifference
+          : goalsFor - goalsAgainst,
+        points: Number(teamRow?.[8] || 0)
+      };
+    }).filter((team) => team.name);
+    if (teams.length === 4) groups.push({ name: `Group ${letter}`, teams });
+  }
+  return groups;
+}
+
 function parseGroupValues(rows = []) {
   const picks = {};
   const blocks = [
@@ -203,11 +235,12 @@ async function sheetStatus() {
       if (range) params.set("range", range);
       return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${params}`;
     };
-    const [derek, derekThirds, alayna, alaynaThirds] = await Promise.all([
+    const [derek, derekThirds, alayna, alaynaThirds, groupTable] = await Promise.all([
       cachedText("sheet-derek", csvUrl("Derek's Group Stage")),
       cachedText("sheet-derek-thirds", csvUrl("Derek's Group Stage", "B22:C30")),
       cachedText("sheet-alayna", csvUrl("Alayna's Group Stage")),
-      cachedText("sheet-alayna-thirds", csvUrl("Alayna's Group Stage", "B22:C30"))
+      cachedText("sheet-alayna-thirds", csvUrl("Alayna's Group Stage", "B22:C30")),
+      cachedText("sheet-group-table", csvUrl("Group Table", "A1:J60"))
     ]);
     return {
       connected: true,
@@ -216,12 +249,14 @@ async function sheetStatus() {
       picks: {
         Derek: parseGroupPicks(derek, derekThirds),
         Alayna: parseGroupPicks(alayna, alaynaThirds)
-      }
+      },
+      standings: parseGroupStandings(parseCsv(groupTable))
     };
   }
   const ranges = [
     "Derek's Group Stage!A1:P30",
     "Alayna's Group Stage!A1:P30",
+    "Group Table!A1:J60",
     "Combined Group Tables!A1:U107",
     "Bracket!A1:V40"
   ];
@@ -239,6 +274,7 @@ async function sheetStatus() {
       Derek: parseGroupValues(findRows("Derek")),
       Alayna: parseGroupValues(findRows("Alayna"))
     },
+    standings: parseGroupStandings(findRows("Group Table")),
     ranges: rangeMap
   };
 }
