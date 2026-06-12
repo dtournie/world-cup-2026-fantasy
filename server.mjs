@@ -172,6 +172,7 @@ function simplifyStandings(data) {
         wins: stat("wins"),
         draws: stat("ties"),
         losses: stat("losses"),
+        goalsFor: stat("pointsFor"),
         goalDifference: stat("pointDifferential"),
         points: stat("points")
       };

@@ -69,8 +69,9 @@ For a private deployment, enable the **Google Sheets API**, create a restricted 
 
 - Exact group positions: **8 / 6 / 4 / 2** points for 1st through 4th.
 - Perfect four-team group: **+10** bonus.
-- Correct best third-place qualifier: **3** points each.
-- Maximum currently formula-backed score: **384** points.
+- Classic third-place qualifiers: **3** points each, plus **25** when all eight are correct.
+- Fanatic third-place qualifiers: **4** points each, plus **35** when all eight are correct.
+- Maximum score: **409** points in Classic or **427** points in Fanatic.
 - Knockout picks exist in the Sheet, but knockout point values are not formula-backed. The UI therefore reports bracket accuracy separately rather than inventing scoring.
 
 ## Sheet audit notes
