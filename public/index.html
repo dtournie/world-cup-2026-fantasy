@@ -44,6 +44,7 @@
         <label><span>Team</span><select id="teamFilter"><option value="all">All teams</option></select></label>
         <label><span>Round</span><select id="roundFilter"><option value="all">All rounds</option><option value="group-stage">Group stage</option><option value="round-of-32">Round of 32</option><option value="round-of-16">Round of 16</option><option value="quarterfinals">Quarterfinals</option><option value="semifinals">Semifinals</option><option value="final">Final</option></select></label>
         <label><span>Matchday</span><select id="matchdayFilter"><option value="all">All matchdays</option></select></label>
+        <label><span>Scoring</span><select id="scoringFilter"><option value="classic">Classic</option><option value="fanatic">Fanatic</option></select></label>
         <button class="clear-btn" id="clearFilters">Clear</button>
       </section>
 
@@ -64,7 +65,7 @@
             <div id="agreementMap" class="agreement-map"></div>
           </article>
           <article class="panel span-7">
-            <div class="panel-head"><div><span>Fantasy outlook</span><h3>Earned vs available</h3></div><span class="micro">Max 384 pts</span></div>
+            <div class="panel-head"><div><span>Fantasy outlook</span><h3>Earned vs available</h3></div><span class="micro" id="maxPointsLabel">Max 409 pts</span></div>
             <div id="pointsOutlook"></div>
           </article>
         </div>
@@ -95,8 +96,9 @@
           <div class="panel-head"><div><span>Audited logic</span><h3>Scoring assumptions</h3></div></div>
           <ol>
             <li><b>Group order:</b> exact 1st/2nd/3rd/4th position earns 8/6/4/2 points.</li>
-            <li><b>Perfect group:</b> all four positions correct adds a 10-point bonus.</li>
-            <li><b>Best third-place teams:</b> each correct qualifier earns 3 points.</li>
+            <li><b>Perfect group:</b> all four positions correct adds a 10-point bonus after that group is complete.</li>
+            <li><b>Classic qualifiers:</b> each correct qualifier earns 3 points; all eight correct adds 25.</li>
+            <li><b>Fanatic qualifiers:</b> each correct qualifier earns 4 points; all eight correct adds 35.</li>
             <li><b>Knockout scoring:</b> the current Sheet bracket has picks and actual results but no scoring formulas, so bracket accuracy is tracked separately until round values are added.</li>
             <li><b>Ties:</b> the Sheet uses <code>RANK.EQ</code> on points only. The app prefers official live table rank, including tournament tie-breakers.</li>
           </ol>
@@ -108,6 +110,6 @@
       <button class="active" data-view="overview">Pulse</button><button data-view="groups">Groups</button><button data-view="matches">Matches</button><button data-view="bracket">Bracket</button><button data-view="accuracy">Picks</button>
     </nav>
     <div class="toast" id="toast" role="status"></div>
-    <script type="module" src="/app.js?v=5"></script>
+    <script type="module" src="/app.js?v=7"></script>
   </body>
 </html>

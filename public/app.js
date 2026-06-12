@@ -75,6 +75,7 @@ const state = {
   standings: [],
   statusFilter: "all",
   filters: { player: "All players", group: "all", team: "all", round: "all", matchday: "all" },
+  scoring: localStorage.getItem("worldCupScoring") || "classic",
   source: "Audited snapshot"
 };
 
@@ -108,25 +109,47 @@ function officialGroups() {
 function calculateScores() {
   const tables = officialGroups();
   const scores = {};
+  const qualifierPoints = state.scoring === "fanatic" ? 4 : 3;
+  const perfectQualifiersBonus = state.scoring === "fanatic" ? 35 : 25;
+  const groupsComplete = groupLetters.every((letter) =>
+    (tables[letter] || []).length === 4 && tables[letter].every((team) => team.played >= 3)
+  );
+  const actualThirdQualifiers = groupsComplete
+    ? groupLetters
+      .map((letter) => [...tables[letter]].sort((a, b) => a.rank - b.rank)[2])
+      .filter(Boolean)
+      .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || (b.goalsFor || 0) - (a.goalsFor || 0))
+      .slice(0, 8)
+      .map((team) => clean(team.name))
+    : [];
   for (const player of Object.keys(PICKS)) {
     const byGroup = {};
     for (const letter of groupLetters) {
       const actual = [...(tables[letter] || [])].sort((a, b) => a.rank - b.rank);
       const isStarted = actual.some((team) => team.played > 0);
+      const isComplete = actual.length === 4 && actual.every((team) => team.played >= 3);
       const values = [8, 6, 4, 2];
       let points = 0;
       if (isStarted) {
         PICKS[player][letter].forEach((team, index) => {
           if (clean(actual[index]?.name) === clean(team)) points += values[index];
         });
-        if (points === 20) points += 10;
+        if (isComplete && points === 20) points += 10;
       }
       byGroup[letter] = points;
     }
     const groupPoints = Object.values(byGroup).reduce((sum, points) => sum + points, 0);
-    scores[player] = { byGroup, groupPoints, thirdPoints: 0, total: groupPoints };
+    const correctQualifiers = actualThirdQualifiers.filter((team) =>
+      PICKS[player].thirds.slice(0, 8).map(clean).includes(team)
+    ).length;
+    const thirdPoints = correctQualifiers * qualifierPoints + (correctQualifiers === 8 ? perfectQualifiersBonus : 0);
+    scores[player] = { byGroup, groupPoints, correctQualifiers, thirdPoints, total: groupPoints + thirdPoints };
   }
   return scores;
+}
+
+function maximumPoints() {
+  return 12 * 30 + (state.scoring === "fanatic" ? 8 * 4 + 35 : 8 * 3 + 25);
 }
 
 function flag(name) { return FLAGS[clean(name)] || "⚽"; }
@@ -146,6 +169,7 @@ function isMatchVisible(match) {
 
 function renderScores() {
   const scores = calculateScores();
+  const maximum = maximumPoints();
   const selected = state.filters.player;
   const leaders = Object.entries(scores)
     .filter(([name]) => selected === "All players" || selected === name)
@@ -156,7 +180,7 @@ function renderScores() {
       <span class="rank">#${index + 1} ${value.total === high ? "CURRENT LEADER" : "CHASING"}</span>
       <h3>${name}</h3>
       <div class="big-score">${value.total}<small>PTS</small></div>
-      <div class="card-foot"><span>${value.groupPoints} group · ${value.thirdPoints} qualifier</span><span class="delta">${384 - value.total} available</span></div>
+      <div class="card-foot"><span>${value.groupPoints} group · ${value.thirdPoints} qualifier</span><span class="delta">${maximum - value.total} available</span></div>
     </article>`).join("") + (selected === "All players" ? `
     <article class="score-card race-card">
       <span class="versus">Live margin</span><strong>${Math.abs(scores.Derek.total - scores.Alayna.total)} pts</strong>
@@ -211,8 +235,10 @@ function renderAgreement() {
 
 function renderOutlook() {
   const scores = calculateScores();
+  const maximum = maximumPoints();
+  $("#maxPointsLabel").textContent = `Max ${maximum} pts · ${state.scoring === "fanatic" ? "Fanatic" : "Classic"}`;
   $("#pointsOutlook").innerHTML = ["Derek", "Alayna"].map((name) => `
-    <div class="outlook-row"><b>${name}</b><div class="outlook-track"><div class="outlook-earned" style="width:${scores[name].total / 384 * 100}%"></div></div><span class="outlook-value">${scores[name].total} / 384</span></div>
+    <div class="outlook-row"><b>${name}</b><div class="outlook-track"><div class="outlook-earned" style="width:${scores[name].total / maximum * 100}%"></div></div><span class="outlook-value">${scores[name].total} / ${maximum}</span></div>
   `).join("");
 }
 
@@ -312,6 +338,12 @@ function setupFilters() {
   $("#groupFilter").insertAdjacentHTML("beforeend", groupLetters.map((letter) => `<option value="${letter}">Group ${letter}</option>`).join(""));
   const teams = Object.values(GROUPS).flat().sort();
   $("#teamFilter").insertAdjacentHTML("beforeend", teams.map((team) => `<option value="${team}">${flag(team)} ${team}</option>`).join(""));
+  $("#scoringFilter").value = state.scoring;
+  $("#scoringFilter").addEventListener("change", (event) => {
+    state.scoring = event.target.value;
+    localStorage.setItem("worldCupScoring", state.scoring);
+    render();
+  });
   const ids = { playerFilter: "player", groupFilter: "group", teamFilter: "team", roundFilter: "round", matchdayFilter: "matchday" };
   Object.entries(ids).forEach(([id, key]) => $(`#${id}`).addEventListener("change", (event) => {
     state.filters[key] = event.target.value;

@@ -70,7 +70,7 @@ h1 em { color: var(--coral); font-style: normal; }
 .primary-btn:active { transform: translateY(1px); }
 .updated { color: var(--muted); font-size: 11px; }
 .filter-dock {
-  display: grid; grid-template-columns: repeat(5, 1fr) auto; gap: 10px; padding: 12px; margin-bottom: 48px;
+  display: grid; grid-template-columns: repeat(6, 1fr) auto; gap: 10px; padding: 12px; margin-bottom: 48px;
   background: rgba(8, 29, 36, .72); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(15px);
 }
 .filter-dock label { position: relative; }
